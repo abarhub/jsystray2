@@ -238,8 +238,10 @@ public class Jsystray2Application extends Application  {
 
     @Override
     public void stop() {
-        // Ferme le contexte Spring Boot lors de l'arrêt de l'application JavaFX
-        applicationContext.close();
+        if(applicationContext!=null) {
+            // Ferme le contexte Spring Boot lors de l'arrêt de l'application JavaFX
+            applicationContext.close();
+        }
         Platform.exit();
     }
 

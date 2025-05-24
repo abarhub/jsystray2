@@ -1,2 +1,3 @@
-spring.application.name=jsystray2
-repertoireProjet=c:\test1
+spring.application.name: jsystray2
+#repertoireProjet: c:\test1
+repertoireProjet: .

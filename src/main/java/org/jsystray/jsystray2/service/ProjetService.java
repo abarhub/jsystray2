@@ -45,11 +45,13 @@ public class ProjetService {
 
     private List<Projet> listePom() {
         String directoryPath = repertoireProjet; // Remplacez par le chemin de votre répertoire
+        Path p=Paths.get(directoryPath).toAbsolutePath().normalize();
+
 
         try {
 //            List<Path> pomFiles = findPomFiles(directoryPath);
             LOGGER.info("récupération des fichiers pom ...");
-            List<Projet> pomFiles = findPomFiles(Path.of(directoryPath));
+            List<Projet> pomFiles = findPomFiles(p);
             LOGGER.info("récupération des fichiers pom ok");
             if (pomFiles.isEmpty()) {
                 LOGGER.info("Aucun fichier pom.xml trouvé (en ignorant target et node_modules) dans : {}", directoryPath);
