@@ -12,10 +12,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import javax.xml.stream.*;
+import javax.xml.stream.events.XMLEvent;
+import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
@@ -178,8 +177,9 @@ public class ProjetService {
         return true; // Le chemin ne contient pas de répertoire à ignorer
     }
 
-    public void updateProject(Projet selectedProduct) throws IOException {
-        updateProject2(selectedProduct);
+    public void updateProject(Projet selectedProduct) throws Exception {
+//        updateProject2(selectedProduct);
+        updateProject3(selectedProduct);
     }
      public void updateProject2(Projet selectedProduct) throws IOException {
         var pomFilePath=selectedProduct.getFichierPom();
@@ -216,5 +216,71 @@ public class ProjetService {
                 LOGGER.info("Aucun parent trouvé dans le fichier POM : " + pomFilePath);
             }
         }
+    }
+
+    public void updateProject3(Projet selectedProduct) throws Exception {
+        String inputFile = selectedProduct.getFichierPom();
+        String outputFile = inputFile+"/../output.xml";
+
+        XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+        XMLOutputFactory outputFactory = XMLOutputFactory.newInstance();
+
+        XMLEventReader reader = inputFactory.createXMLEventReader(new FileInputStream(inputFile));
+        XMLEventWriter writer = outputFactory.createXMLEventWriter(new FileOutputStream(outputFile), "UTF-8");
+
+        XMLEventFactory eventFactory = XMLEventFactory.newInstance();
+
+        boolean insideNode1 = false;
+        boolean insideNode2 = false;
+
+        while (reader.hasNext()) {
+            XMLEvent event = reader.nextEvent();
+
+            if (event.isStartElement()) {
+                String tagName = event.asStartElement().getName().getLocalPart();
+
+                if (tagName.equals("project")) {
+                    insideNode1 = true;
+                } else if (insideNode1 && tagName.equals("version")) {
+                    insideNode2 = true;
+                }
+
+                writer.add(event);
+            }
+
+            else if (event.isCharacters() && insideNode2) {
+                String originalText = event.asCharacters().getData();
+                if(originalText.contains("0.0.1-SNAPSHOT")) {
+
+                    LOGGER.info("Texte original dans <node2> : " + originalText);
+
+                    // Remplacer le texte ici
+                    String newText = "0.0.2-SNAPSHOT";
+                    writer.add(eventFactory.createCharacters(newText));
+                }
+            }
+
+            else if (event.isEndElement()) {
+                String tagName = event.asEndElement().getName().getLocalPart();
+
+                if (tagName.equals("version")) {
+                    insideNode2 = false;
+                } else if (tagName.equals("project")) {
+                    insideNode1 = false;
+                }
+
+                writer.add(event);
+            }
+
+            else {
+                writer.add(event); // commentaires, espaces, etc.
+            }
+        }
+
+        writer.flush();
+        writer.close();
+        reader.close();
+
+        LOGGER.info("Modification terminée !");
     }
 }
