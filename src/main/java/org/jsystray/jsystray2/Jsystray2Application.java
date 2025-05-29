@@ -10,6 +10,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import org.jsystray.jsystray2.config.AppConfig;
 import org.jsystray.jsystray2.service.ProjetService;
+import org.jsystray.jsystray2.ui.SelectionUI;
 import org.jsystray.jsystray2.vo.Projet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,6 +157,11 @@ public class Jsystray2Application extends Application  {
     }
 
     private void selection(){
+        var selection=new SelectionUI(applicationContext);
+        selection.selection();
+    }
+
+    private void selection2(){
 
         var liste=listePom();
 
