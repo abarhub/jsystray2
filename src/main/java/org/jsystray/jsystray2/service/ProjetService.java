@@ -257,6 +257,8 @@ public class ProjetService {
                     // Remplacer le texte ici
                     String newText = "0.0.2-SNAPSHOT";
                     writer.add(eventFactory.createCharacters(newText));
+                } else {
+                    writer.add(event);
                 }
             }
 
