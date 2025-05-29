@@ -262,11 +262,11 @@ public class ProjetService {
 
                         LOGGER.info("Texte original dans <node2> : {},({})", originalText, event.getLocation());
                     debut=new Position(event.getLocation().getLineNumber(),event.getLocation().getColumnNumber());
-                    fin=new Position(event.getLocation().getLineNumber(),event.getLocation().getColumnNumber()+originalText.length());
+                    fin=new Position(event.getLocation().getLineNumber(),event.getLocation().getColumnNumber()+originalText.length()-1);
 
 
                         // Remplacer le texte ici
-                        String newText = "0.0.2-SNAPSHOT";
+                        String newText = "0.0.20-SNAPSHOT";
                         writer.add(eventFactory.createCharacters(newText));
 //                    } else {
 //                        writer.add(event);
@@ -294,7 +294,7 @@ public class ProjetService {
 
         //Files.move(outputFile, inputFile, StandardCopyOption.REPLACE_EXISTING);
         if(debut!=null && fin!=null) {
-            modifierFichier(inputFile.toString(), debut, fin, "0.0.2-SNAPSHOT");
+            modifierFichier(inputFile.toString(), debut, fin, "0.0.20-SNAPSHOT");
         }
 
         LOGGER.info("Modification terminée !");
