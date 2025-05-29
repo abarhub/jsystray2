@@ -219,69 +219,73 @@ public class ProjetService {
     }
 
     public void updateProject3(Projet selectedProduct) throws Exception {
-        String inputFile = selectedProduct.getFichierPom();
-        String outputFile = inputFile+"/../output.xml";
+        Path inputFile = Paths.get(selectedProduct.getFichierPom());
+        Path outputFile = Files.createTempFile("output",".xml");
 
         XMLInputFactory inputFactory = XMLInputFactory.newInstance();
         XMLOutputFactory outputFactory = XMLOutputFactory.newInstance();
 
-        XMLEventReader reader = inputFactory.createXMLEventReader(new FileInputStream(inputFile));
-        XMLEventWriter writer = outputFactory.createXMLEventWriter(new FileOutputStream(outputFile), "UTF-8");
+        try(var inputStream=Files.newInputStream(inputFile);
+                var outputStream=Files.newOutputStream(outputFile)) {
+            XMLEventReader reader = inputFactory.createXMLEventReader(inputStream);
+            XMLEventWriter writer = outputFactory.createXMLEventWriter(outputStream, "UTF-8");
 
-        XMLEventFactory eventFactory = XMLEventFactory.newInstance();
+            XMLEventFactory eventFactory = XMLEventFactory.newInstance();
 
-        boolean insideNode1 = false;
-        boolean insideNode2 = false;
+            boolean insideNode1 = false;
+            boolean insideNode2 = false;
+            List<String> balises = new ArrayList<>();
+            List<String> balises2 = List.of("project","version");
 
-        while (reader.hasNext()) {
-            XMLEvent event = reader.nextEvent();
+            while (reader.hasNext()) {
+                XMLEvent event = reader.nextEvent();
 
-            if (event.isStartElement()) {
-                String tagName = event.asStartElement().getName().getLocalPart();
+                if (event.isStartElement()) {
+                    String tagName = event.asStartElement().getName().getLocalPart();
 
-                if (tagName.equals("project")) {
-                    insideNode1 = true;
-                } else if (insideNode1 && tagName.equals("version")) {
-                    insideNode2 = true;
-                }
+                    balises.add(tagName);
+                    if (tagName.equals("project")) {
+                        insideNode1 = true;
+                    } else if (insideNode1 && tagName.equals("version")) {
+                        insideNode2 = true;
+                    }
 
-                writer.add(event);
-            }
-
-            else if (event.isCharacters() && insideNode2) {
-                String originalText = event.asCharacters().getData();
-                if(originalText.contains("0.0.1-SNAPSHOT")) {
-
-                    LOGGER.info("Texte original dans <node2> : " + originalText);
-
-                    // Remplacer le texte ici
-                    String newText = "0.0.2-SNAPSHOT";
-                    writer.add(eventFactory.createCharacters(newText));
-                } else {
                     writer.add(event);
+                //} else if (event.isCharacters() && insideNode2) {
+                } else if (event.isCharacters() && balises.equals(balises2)) {
+                    String originalText = event.asCharacters().getData();
+//                    if (originalText.contains("0.0.1-SNAPSHOT")) {
+
+                        LOGGER.info("Texte original dans <node2> : " + originalText);
+
+                        // Remplacer le texte ici
+                        String newText = "0.0.2-SNAPSHOT";
+                        writer.add(eventFactory.createCharacters(newText));
+//                    } else {
+//                        writer.add(event);
+//                    }
+                } else if (event.isEndElement()) {
+                    String tagName = event.asEndElement().getName().getLocalPart();
+
+                    balises.removeLast();
+                    if (tagName.equals("version")) {
+                        insideNode2 = false;
+                    } else if (tagName.equals("project")) {
+                        insideNode1 = false;
+                    }
+
+                    writer.add(event);
+                } else {
+                    writer.add(event); // commentaires, espaces, etc.
                 }
             }
 
-            else if (event.isEndElement()) {
-                String tagName = event.asEndElement().getName().getLocalPart();
-
-                if (tagName.equals("version")) {
-                    insideNode2 = false;
-                } else if (tagName.equals("project")) {
-                    insideNode1 = false;
-                }
-
-                writer.add(event);
-            }
-
-            else {
-                writer.add(event); // commentaires, espaces, etc.
-            }
+            writer.flush();
+            writer.close();
+            reader.close();
         }
 
-        writer.flush();
-        writer.close();
-        reader.close();
+        Files.move(outputFile, inputFile, StandardCopyOption.REPLACE_EXISTING);
 
         LOGGER.info("Modification terminée !");
     }
