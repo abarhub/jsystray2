@@ -6,6 +6,7 @@ import org.apache.maven.model.Parent;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.jsystray.jsystray2.Jsystray2Application;
+import org.jsystray.jsystray2.vo.Position;
 import org.jsystray.jsystray2.vo.Projet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -180,6 +181,7 @@ public class ProjetService {
     public void updateProject(Projet selectedProduct) throws Exception {
 //        updateProject2(selectedProduct);
         updateProject3(selectedProduct);
+//        updateProject4(selectedProduct);
     }
      public void updateProject2(Projet selectedProduct) throws IOException {
         var pomFilePath=selectedProduct.getFichierPom();
@@ -225,6 +227,8 @@ public class ProjetService {
         XMLInputFactory inputFactory = XMLInputFactory.newInstance();
         XMLOutputFactory outputFactory = XMLOutputFactory.newInstance();
 
+        Position debut=null,fin=null;
+
         try(var inputStream=Files.newInputStream(inputFile);
                 var outputStream=Files.newOutputStream(outputFile)) {
             XMLEventReader reader = inputFactory.createXMLEventReader(inputStream);
@@ -256,7 +260,10 @@ public class ProjetService {
                     String originalText = event.asCharacters().getData();
 //                    if (originalText.contains("0.0.1-SNAPSHOT")) {
 
-                        LOGGER.info("Texte original dans <node2> : " + originalText);
+                        LOGGER.info("Texte original dans <node2> : {},({})", originalText, event.getLocation());
+                    debut=new Position(event.getLocation().getLineNumber(),event.getLocation().getColumnNumber());
+                    fin=new Position(event.getLocation().getLineNumber(),event.getLocation().getColumnNumber()+originalText.length());
+
 
                         // Remplacer le texte ici
                         String newText = "0.0.2-SNAPSHOT";
@@ -285,8 +292,125 @@ public class ProjetService {
             reader.close();
         }
 
-        Files.move(outputFile, inputFile, StandardCopyOption.REPLACE_EXISTING);
+        //Files.move(outputFile, inputFile, StandardCopyOption.REPLACE_EXISTING);
+        if(debut!=null && fin!=null) {
+            modifierFichier(inputFile.toString(), debut, fin, "0.0.2-SNAPSHOT");
+        }
 
         LOGGER.info("Modification terminée !");
+    }
+
+    public void updateProject4(Projet selectedProduct) throws Exception {
+
+    }
+
+    public static class PositionIndex {
+        int index;
+        boolean trouve;
+
+        public PositionIndex(int index, boolean trouve) {
+            this.index = index;
+            this.trouve = trouve;
+        }
+    }
+
+    public void modifierFichier(String cheminFichier, Position debut, Position fin, String nouveauTexte) throws IOException {
+        // 1. Charger le fichier entier en tableau de caractères
+        String contenu = Files.readString(Paths.get(cheminFichier));
+        char[] caracteres = contenu.toCharArray();
+
+        // 2. Parcourir le tableau pour trouver les positions de début et fin
+        PositionIndex posDebut = trouverPosition(caracteres, debut);
+        PositionIndex posFin = trouverPosition(caracteres, fin);
+
+        // 3. Valider que les positions ont été trouvées
+        if (!posDebut.trouve) {
+            throw new IllegalArgumentException("Position de début " + debut + " non trouvée dans le fichier");
+        }
+        if (!posFin.trouve) {
+            throw new IllegalArgumentException("Position de fin " + fin + " non trouvée dans le fichier");
+        }
+        if (posDebut.index > posFin.index) {
+            throw new IllegalArgumentException("La position de début doit être avant la position de fin");
+        }
+
+        // 4. Remplacer en mémoire dans le tableau de caractères
+        char[] nouveauContenu = remplacerDansTableau(caracteres, posDebut.index, posFin.index, nouveauTexte);
+
+        // 5. Écrire le nouveau contenu dans le fichier
+        Files.writeString(Paths.get(cheminFichier), new String(nouveauContenu));
+
+        System.out.println("Remplacement effectué :");
+        System.out.println("- Position début: " + debut + " (index " + posDebut.index + ")");
+        System.out.println("- Position fin: " + fin + " (index " + posFin.index + ")");
+        System.out.println("- Texte remplacé par: \"" + nouveauTexte + "\"");
+    }
+
+    /**
+     * Parcourt le tableau de caractères pour trouver l'index correspondant à la position ligne/colonne
+     */
+    private PositionIndex trouverPosition(char[] caracteres, Position position) {
+        int ligneActuelle = 1;
+        int colonneActuelle = 1;
+
+        for (int i = 0; i < caracteres.length; i++) {
+            // Vérifier si on a atteint la position recherchée
+            if (ligneActuelle == position.ligne() && colonneActuelle == position.colonne()) {
+                return new PositionIndex(i, true);
+            }
+
+            // Gérer les sauts de ligne
+            if (caracteres[i] == '\n') {
+                ligneActuelle++;
+                colonneActuelle = 1;
+            } else if (caracteres[i] == '\r') {
+                // Gérer les retours chariot (Windows: \r\n, Mac classique: \r)
+                if (i + 1 < caracteres.length && caracteres[i + 1] == '\n') {
+                    // Windows: \r\n - on passe le \r, le \n sera traité au prochain tour
+                    continue;
+                } else {
+                    // Mac classique: \r seul
+                    ligneActuelle++;
+                    colonneActuelle = 1;
+                }
+            } else {
+                colonneActuelle++;
+            }
+        }
+
+        // Vérifier si la position est à la fin du fichier
+        if (ligneActuelle == position.ligne() && colonneActuelle == position.colonne()) {
+            return new PositionIndex(caracteres.length, true);
+        }
+
+        return new PositionIndex(-1, false);
+    }
+
+    /**
+     * Remplace la portion du tableau entre indexDebut et indexFin par le nouveau texte
+     */
+    private char[] remplacerDansTableau(char[] original, int indexDebut, int indexFin, String nouveauTexte) {
+        char[] nouveauTexteChars = nouveauTexte.toCharArray();
+
+        // Calculer la taille du nouveau tableau
+        int tailleOriginale = original.length;
+        int tailleASupprimer = indexFin - indexDebut + 1;
+        int tailleAAjouter = nouveauTexteChars.length;
+        int nouvelleTaille = tailleOriginale - tailleASupprimer + tailleAAjouter;
+
+        // Créer le nouveau tableau
+        char[] resultat = new char[nouvelleTaille];
+
+        // Copier la partie avant le remplacement
+        System.arraycopy(original, 0, resultat, 0, indexDebut);
+
+        // Copier le nouveau texte
+        System.arraycopy(nouveauTexteChars, 0, resultat, indexDebut, nouveauTexteChars.length);
+
+        // Copier la partie après le remplacement
+        System.arraycopy(original, indexFin + 1, resultat, indexDebut + nouveauTexteChars.length,
+                tailleOriginale - indexFin - 1);
+
+        return resultat;
     }
 }
