@@ -1,11 +1,21 @@
 package org.jsystray.jsystray2.service;
 
 import jakarta.annotation.PostConstruct;
+import javafx.collections.FXCollections;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
-import org.jsystray.jsystray2.Jsystray2Application;
 import org.jsystray.jsystray2.vo.Position;
 import org.jsystray.jsystray2.vo.Projet;
 import org.slf4j.Logger;
@@ -15,12 +25,13 @@ import org.springframework.stereotype.Service;
 
 import javax.xml.stream.*;
 import javax.xml.stream.events.XMLEvent;
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,16 +44,16 @@ public class ProjetService {
     private String repertoireProjet;
 
     public ProjetService() {
-        LOGGER.info("creation repertoireProjet: {}",repertoireProjet);
+        LOGGER.info("creation repertoireProjet: {}", repertoireProjet);
     }
 
     @PostConstruct
-    public void init(){
-        LOGGER.info("init repertoireProjet: {}",repertoireProjet);
+    public void init() {
+        LOGGER.info("init repertoireProjet: {}", repertoireProjet);
     }
 
-    public List<Projet> getProjets(){
-        LOGGER.info("répertoire: {}",repertoireProjet);
+    public List<Projet> getProjets() {
+        LOGGER.info("répertoire: {}", repertoireProjet);
         if (repertoireProjet == null || repertoireProjet.isEmpty()) {
             throw new RuntimeException("Répertoire vide");
         }
@@ -52,7 +63,7 @@ public class ProjetService {
 
     private List<Projet> listePom() {
         String directoryPath = repertoireProjet; // Remplacez par le chemin de votre répertoire
-        Path p=Paths.get(directoryPath).toAbsolutePath().normalize();
+        Path p = Paths.get(directoryPath).toAbsolutePath().normalize();
 
 
         try {
@@ -65,7 +76,7 @@ public class ProjetService {
             } else {
                 LOGGER.info("Fichiers pom.xml trouvés (en ignorant target et node_modules) :");
                 for (Projet pomFile : pomFiles) {
-                    LOGGER.info("{}",pomFile.getFichierPom());
+                    LOGGER.info("{}", pomFile.getFichierPom());
                 }
             }
             return pomFiles;
@@ -91,7 +102,7 @@ public class ProjetService {
 
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if (Objects.equals(file.getFileName().toString(),"pom.xml")) {
+                if (Objects.equals(file.getFileName().toString(), "pom.xml")) {
                     Projet projet = new Projet();
                     projet.setNom(file.getParent().getFileName().toString());
                     projet.setRepertoire(file.getParent().toAbsolutePath().toString());
@@ -183,8 +194,9 @@ public class ProjetService {
         updateProject3(selectedProduct);
 //        updateProject4(selectedProduct);
     }
-     public void updateProject2(Projet selectedProduct) throws IOException {
-        var pomFilePath=selectedProduct.getFichierPom();
+
+    public void updateProject2(Projet selectedProduct) throws IOException {
+        var pomFilePath = selectedProduct.getFichierPom();
         File pomFile = new File(pomFilePath);
         if (!pomFile.exists() || !pomFile.isFile()) {
             throw new IllegalArgumentException("Le fichier POM spécifié n'existe pas ou n'est pas un fichier valide : " + pomFilePath);
@@ -222,15 +234,16 @@ public class ProjetService {
 
     public void updateProject3(Projet selectedProduct) throws Exception {
         Path inputFile = Paths.get(selectedProduct.getFichierPom());
-        Path outputFile = Files.createTempFile("output",".xml");
+        Path outputFile = Files.createTempFile("output", ".xml");
 
         XMLInputFactory inputFactory = XMLInputFactory.newInstance();
         XMLOutputFactory outputFactory = XMLOutputFactory.newInstance();
 
-        Position debut=null,fin=null;
+        Position debut = null, fin = null;
+        String versionActuelle = null;
 
-        try(var inputStream=Files.newInputStream(inputFile);
-                var outputStream=Files.newOutputStream(outputFile)) {
+        try (var inputStream = Files.newInputStream(inputFile);
+             var outputStream = Files.newOutputStream(outputFile)) {
             XMLEventReader reader = inputFactory.createXMLEventReader(inputStream);
             XMLEventWriter writer = outputFactory.createXMLEventWriter(outputStream, "UTF-8");
 
@@ -239,7 +252,7 @@ public class ProjetService {
             boolean insideNode1 = false;
             boolean insideNode2 = false;
             List<String> balises = new ArrayList<>();
-            List<String> balises2 = List.of("project","version");
+            List<String> balises2 = List.of("project", "version");
 
             while (reader.hasNext()) {
                 XMLEvent event = reader.nextEvent();
@@ -255,19 +268,19 @@ public class ProjetService {
                     }
 
                     writer.add(event);
-                //} else if (event.isCharacters() && insideNode2) {
+                    //} else if (event.isCharacters() && insideNode2) {
                 } else if (event.isCharacters() && balises.equals(balises2)) {
                     String originalText = event.asCharacters().getData();
 //                    if (originalText.contains("0.0.1-SNAPSHOT")) {
 
-                        LOGGER.info("Texte original dans <node2> : {},({})", originalText, event.getLocation());
-                    debut=new Position(event.getLocation().getLineNumber(),event.getLocation().getColumnNumber());
-                    fin=new Position(event.getLocation().getLineNumber(),event.getLocation().getColumnNumber()+originalText.length()-1);
+                    LOGGER.info("Texte original dans <node2> : {},({})", originalText, event.getLocation());
+                    debut = new Position(event.getLocation().getLineNumber(), event.getLocation().getColumnNumber());
+                    fin = new Position(event.getLocation().getLineNumber(), event.getLocation().getColumnNumber() + originalText.length() - 1);
+                    versionActuelle = originalText;
 
-
-                        // Remplacer le texte ici
-                        String newText = "0.0.20-SNAPSHOT";
-                        writer.add(eventFactory.createCharacters(newText));
+                    // Remplacer le texte ici
+                    String newText = "0.0.20-SNAPSHOT";
+                    //writer.add(eventFactory.createCharacters(newText));
 //                    } else {
 //                        writer.add(event);
 //                    }
@@ -293,11 +306,120 @@ public class ProjetService {
         }
 
         //Files.move(outputFile, inputFile, StandardCopyOption.REPLACE_EXISTING);
-        if(debut!=null && fin!=null) {
-            modifierFichier(inputFile.toString(), debut, fin, "0.0.20-SNAPSHOT");
+        if (debut != null && fin != null) {
+            afficheVersion(inputFile, debut, fin, versionActuelle);
+
+            //modifierFichier(inputFile.toString(), debut, fin, "0.0.20-SNAPSHOT");
         }
 
         LOGGER.info("Modification terminée !");
+    }
+
+    private void afficheVersion(Path inputFile, Position debut, Position fin, String versionActuelle) {
+        List<String> listeVersions = getListeVersion(versionActuelle);
+        List<String> liste2 = new ArrayList<>();
+        Map<String, String> map = new HashMap<>();
+        for (String version : listeVersions) {
+            map.put("Version " + version, version);
+            liste2.add(version);
+        }
+        final String autre = "Autre (saisir)";
+        liste2.add(autre);
+        Stage primaryStage = new Stage();
+        // 1. Création de la ComboBox
+        var comboBox = new ComboBox<String>();
+        comboBox.setItems(FXCollections.observableArrayList(liste2));
+        comboBox.setPromptText("Sélectionnez une option"); // Texte par défaut
+
+        // 2. Création du TextField (initialement masqué)
+        var textField = new TextField();
+        textField.setPromptText("Saisissez votre valeur");
+        textField.setVisible(false); // Masqué par défaut
+        textField.setManaged(false); // N'affecte pas l'agencement quand il est masqué
+
+        // 3. Gestion de l'affichage/masquage du TextField en fonction de la sélection de la ComboBox
+        comboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (autre.equals(newValue)) {
+                textField.setVisible(true);
+                textField.setManaged(true);
+            } else {
+                textField.setVisible(false);
+                textField.setManaged(false);
+                textField.clear(); // Efface le contenu si l'option "Autre" n'est plus sélectionnée
+            }
+        });
+
+        // 4. Création du bouton de validation
+        var validateButton = new Button("Valider");
+        var messageLabel = new Label(); // Initialisation du label pour les messages
+
+        // 5. Action du bouton de validation
+        validateButton.setOnAction(event -> {
+            String selectedOption = comboBox.getSelectionModel().getSelectedItem();
+            String message = "";
+
+            if (selectedOption == null) {
+                message = "Veuillez sélectionner une option.";
+            } else if (autre.equals(selectedOption)) {
+                if (textField.getText().isEmpty()) {
+                    message = "Veuillez saisir une valeur pour 'Autre'.";
+                } else {
+                    message = "Option sélectionnée : Autre, Valeur saisie : " + textField.getText();
+                }
+            } else {
+                var version=map.get(selectedOption);
+                message = "Option sélectionnée : " + selectedOption+" ("+version+")";
+                if(StringUtils.isNotBlank(version)) {
+                    try {
+                        modifierFichier(inputFile.toString(), debut, fin, version);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+            messageLabel.setText(message);
+        });
+
+        // 6. Agencement des éléments dans un VBox
+        VBox root = new VBox(10); // Espacement de 10 pixels entre les enfants
+        root.setPadding(new Insets(20)); // Marge intérieure de 20 pixels
+        root.setAlignment(Pos.TOP_CENTER); // Alignement des éléments au centre en haut
+
+        root.getChildren().addAll(comboBox, textField, validateButton, messageLabel);
+
+        // 7. Création de la scène et affichage de la fenêtre
+        Scene scene = new Scene(root, 400, 250); // Largeur, Hauteur
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private List<String> getListeVersion(String versionActuelle) {
+        List<String> listeVersions = new ArrayList<>();
+        String snapshotSuffix = "-SNAPSHOT";
+        if (versionActuelle.endsWith(snapshotSuffix)) {
+            versionActuelle = versionActuelle.substring(0, versionActuelle.length() - snapshotSuffix.length());
+        }
+        String[] versions = versionActuelle.split("\\.");
+        List<Integer> listeVersionsInt = new ArrayList<>();
+        for (String version : versions) {
+            listeVersionsInt.add(Integer.parseInt(version));
+        }
+        for (int i = 0; i < listeVersionsInt.size(); i++) {
+            StringBuilder s = new StringBuilder();
+            for (int j = 0; j < listeVersionsInt.size(); j++) {
+                if (!s.isEmpty()) {
+                    s.append(".");
+                }
+                var n = listeVersionsInt.get(j);
+                if (j == 1) {
+                    n++;
+                }
+                s.append(n);
+            }
+            s.append(snapshotSuffix);
+            listeVersions.add(s.toString());
+        }
+        return listeVersions;
     }
 
     public void updateProject4(Projet selectedProduct) throws Exception {
