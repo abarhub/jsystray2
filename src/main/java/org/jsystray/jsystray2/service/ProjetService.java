@@ -1,6 +1,10 @@
 package org.jsystray.jsystray2.service;
 
 import jakarta.annotation.PostConstruct;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.Parent;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.jsystray.jsystray2.Jsystray2Application;
 import org.jsystray.jsystray2.vo.Projet;
 import org.slf4j.Logger;
@@ -8,6 +12,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -171,4 +178,43 @@ public class ProjetService {
         return true; // Le chemin ne contient pas de répertoire à ignorer
     }
 
+    public void updateProject(Projet selectedProduct) throws IOException {
+        updateProject2(selectedProduct);
+    }
+     public void updateProject2(Projet selectedProduct) throws IOException {
+        var pomFilePath=selectedProduct.getFichierPom();
+        File pomFile = new File(pomFilePath);
+        if (!pomFile.exists() || !pomFile.isFile()) {
+            throw new IllegalArgumentException("Le fichier POM spécifié n'existe pas ou n'est pas un fichier valide : " + pomFilePath);
+        }
+
+        MavenXpp3Reader reader = new MavenXpp3Reader();
+        Model model = null;
+        try (FileReader fileReader = new FileReader(pomFile)) {
+            model = reader.read(fileReader);
+        } catch (Exception e) {
+            // Gérer les exceptions de lecture XML (par exemple, fichier mal formé)
+            throw new IOException("Erreur lors de la lecture du fichier POM : " + pomFilePath, e);
+        }
+
+        if (model != null) {
+            Parent parent = model.getParent();
+            if (parent != null) {
+                LOGGER.info("Ancienne version du parent : " + parent.getVersion());
+                parent.setVersion("3.5.0");
+                LOGGER.info("Nouvelle version du parent : " + parent.getVersion());
+
+                MavenXpp3Writer writer = new MavenXpp3Writer();
+                try (FileWriter fileWriter = new FileWriter(pomFile)) {
+                    writer.write(fileWriter, model);
+                    LOGGER.info("La version du parent a été mise à jour avec succès dans : " + pomFilePath);
+                } catch (Exception e) {
+                    // Gérer les exceptions d'écriture XML
+                    throw new IOException("Erreur lors de l'écriture du fichier POM : " + pomFilePath, e);
+                }
+            } else {
+                LOGGER.info("Aucun parent trouvé dans le fichier POM : " + pomFilePath);
+            }
+        }
+    }
 }
