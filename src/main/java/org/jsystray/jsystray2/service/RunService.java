@@ -17,7 +17,7 @@ public class RunService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RunService.class);
 
-    private int runCommand(Consumer<Line> consumer, String... commandes) throws InterruptedException, IOException {
+    public int runCommand(Consumer<Line> consumer, String... commandes) throws InterruptedException, IOException {
         ProcessBuilder builder = new ProcessBuilder();
         List<String> liste = new ArrayList<>();
         for (String s : commandes) {

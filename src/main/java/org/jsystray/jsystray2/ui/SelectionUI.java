@@ -104,11 +104,25 @@ public class SelectionUI {
             }
         });
 
+        // 4. Création du bouton de validation
+        Button validateButton3 = new Button("Valider la sélection3");
+        validateButton3.setOnAction(event -> {
+            Projet selectedProduct = tableView.getSelectionModel().getSelectedItem();
+            if (selectedProduct != null) {
+                try {
+                    ProjetService projetService = applicationContext.getBean("projetService", ProjetService.class);
+                    projetService.dependancy(selectedProduct);
+                }catch (Exception e){
+                    LOGGER.error("Erreur", e);
+                }
+            }
+        });
+
         //VBox root = new VBox(new Text("texte"));
         VBox root = new VBox(10);
         root.setSpacing(10);
         root.setStyle("-fx-padding: 10;");
-        root.getChildren().addAll(tableView, validateButton, validateButton2);
+        root.getChildren().addAll(tableView, validateButton, validateButton2, validateButton3);
 
         Scene newScene = new Scene(root, 300, 200);
         newStage.setScene(newScene);
