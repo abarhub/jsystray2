@@ -320,12 +320,14 @@ public class ProjetService {
         List<String> liste2 = new ArrayList<>();
         Map<String, String> map = new HashMap<>();
         for (String version : listeVersions) {
-            map.put("Version " + version, version);
-            liste2.add(version);
+            var libelle="Version " + version;
+            map.put(libelle, version);
+            liste2.add(libelle);
         }
         final String autre = "Autre (saisir)";
         liste2.add(autre);
         Stage primaryStage = new Stage();
+        primaryStage.setTitle("Sélectionnez la nouvelle version (version actuelle : " + versionActuelle + ")");
         // 1. Création de la ComboBox
         var comboBox = new ComboBox<String>();
         comboBox.setItems(FXCollections.observableArrayList(liste2));
@@ -367,9 +369,9 @@ public class ProjetService {
                     message = "Option sélectionnée : Autre, Valeur saisie : " + textField.getText();
                 }
             } else {
-                var version=map.get(selectedOption);
-                message = "Option sélectionnée : " + selectedOption+" ("+version+")";
-                if(StringUtils.isNotBlank(version)) {
+                var version = map.get(selectedOption);
+                message = "Option sélectionnée : " + selectedOption + " (" + version + ")";
+                if (StringUtils.isNotBlank(version)) {
                     try {
                         modifierFichier(inputFile.toString(), debut, fin, version);
                     } catch (IOException e) {
@@ -411,8 +413,10 @@ public class ProjetService {
                     s.append(".");
                 }
                 var n = listeVersionsInt.get(j);
-                if (j == 1) {
+                if (j == i) {
                     n++;
+                } else if (j > i) {
+                    n = 0;
                 }
                 s.append(n);
             }
