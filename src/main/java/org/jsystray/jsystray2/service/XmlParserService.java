@@ -4,6 +4,7 @@ import org.jsystray.jsystray2.vo.Position;
 import org.jsystray.jsystray2.vo.ResultatBalise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
@@ -15,6 +16,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+@Service
 public class XmlParserService {
 
 

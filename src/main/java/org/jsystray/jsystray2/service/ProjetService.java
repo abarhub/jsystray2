@@ -20,8 +20,10 @@ import org.jsystray.jsystray2.vo.Position;
 import org.jsystray.jsystray2.vo.Projet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.xml.stream.*;
 import javax.xml.stream.events.XMLEvent;
@@ -43,6 +45,9 @@ public class ProjetService {
 
     @Value("${repertoireProjet}")
     private String repertoireProjet;
+
+    @Autowired
+    private XmlParserService XmlParserService;
 
     public ProjetService() {
         LOGGER.info("creation repertoireProjet: {}", repertoireProjet);
@@ -192,8 +197,8 @@ public class ProjetService {
 
     public void updateProject(Projet selectedProduct) throws Exception {
 //        updateProject2(selectedProduct);
-        updateProject3(selectedProduct);
-//        updateProject4(selectedProduct);
+//        updateProject3(selectedProduct);
+        updateProject4(selectedProduct);
     }
 
     public void updateProject2(Projet selectedProduct) throws IOException {
@@ -374,7 +379,8 @@ public class ProjetService {
                 message = "Option sélectionnée : " + selectedOption + " (" + version + ")";
                 if (StringUtils.isNotBlank(version)) {
                     try {
-                        modifierFichier(inputFile.toString(), debut, fin, version);
+                        //modifierFichier(inputFile.toString(), debut, fin, version);
+                        this.modifierFichier(inputFile.toString(), debut, fin, version);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -428,7 +434,12 @@ public class ProjetService {
     }
 
     public void updateProject4(Projet selectedProduct) throws Exception {
-
+        Path pomFile=Path.of(selectedProduct.getFichierPom());
+        var resultat=XmlParserService.parse(pomFile,List.of(PomParserService.PROJET_VERSION));
+        if(!CollectionUtils.isEmpty(resultat)){
+            var res=resultat.getFirst();
+            afficheVersion(pomFile, res.positionDebut(), res.positionFin(), res.valeur());
+        }
     }
 
     public static class PositionIndex {

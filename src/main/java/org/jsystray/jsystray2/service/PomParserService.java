@@ -2,18 +2,20 @@ package org.jsystray.jsystray2.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
 import java.util.List;
 
-public class PomPaserService {
+@Service
+public class PomParserService {
 
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PomPaserService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PomParserService.class);
 
-    private static final List<String> PROJET_VERSION = List.of("project","version");
-    private static final List<String> PROJET_GROUPEID = List.of("project","groupId");
-    private static final List<String> PROJET_ARTIFACTID = List.of("project","artifactId");
+    public static final List<String> PROJET_VERSION = List.of("project","version");
+    public static final List<String> PROJET_GROUPEID = List.of("project","groupId");
+    public static final List<String> PROJET_ARTIFACTID = List.of("project","artifactId");
 
     private XmlParserService xmlParserService;
 
