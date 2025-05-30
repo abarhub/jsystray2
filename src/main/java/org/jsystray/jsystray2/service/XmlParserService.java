@@ -1,20 +1,18 @@
 package org.jsystray.jsystray2.service;
 
 import org.jsystray.jsystray2.vo.Position;
-import org.jsystray.jsystray2.vo.Projet;
 import org.jsystray.jsystray2.vo.ResultatBalise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.CollectionUtils;
 
-import javax.xml.stream.*;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.events.XMLEvent;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class XmlParserService {
@@ -24,26 +22,14 @@ public class XmlParserService {
 
     public List<ResultatBalise> parse(Path fichier, List<List<String>> balisesRecherche) throws Exception {
         Path inputFile = fichier;
-//        Path outputFile = Files.createTempFile("output", ".xml");
         List<ResultatBalise> resultat = new ArrayList<>();
 
         XMLInputFactory inputFactory = XMLInputFactory.newInstance();
-//        XMLOutputFactory outputFactory = XMLOutputFactory.newInstance();
 
-        Position debut = null, fin = null;
-//        String versionActuelle = null;
-
-        try (var inputStream = Files.newInputStream(inputFile);
-             /*var outputStream = Files.newOutputStream(outputFile)*/) {
+        try (var inputStream = Files.newInputStream(inputFile)) {
             XMLEventReader reader = inputFactory.createXMLEventReader(inputStream);
-//            XMLEventWriter writer = outputFactory.createXMLEventWriter(outputStream, "UTF-8");
 
-//            XMLEventFactory eventFactory = XMLEventFactory.newInstance();
-
-//            boolean insideNode1 = false;
-//            boolean insideNode2 = false;
             List<String> balises = new ArrayList<>();
-//            List<String> balises2 = List.of("project", "version");
 
             while (reader.hasNext()) {
                 XMLEvent event = reader.nextEvent();
@@ -52,59 +38,24 @@ public class XmlParserService {
                     String tagName = event.asStartElement().getName().getLocalPart();
 
                     balises.add(tagName);
-//                    if (tagName.equals("project")) {
-//                        insideNode1 = true;
-//                    } else if (insideNode1 && tagName.equals("version")) {
-//                        insideNode2 = true;
-//                    }
-
-//                    writer.add(event);
-                    //} else if (event.isCharacters() && insideNode2) {
-                } else if (event.isCharacters() && contient(balisesRecherche,balises)) {
+                } else if (event.isCharacters() && contient(balisesRecherche, balises)) {
                     String originalText = event.asCharacters().getData();
-//                    if (originalText.contains("0.0.1-SNAPSHOT")) {
 
                     LOGGER.info("Texte original dans <node2> : {},({})", originalText, event.getLocation());
+                    Position debut, fin;
                     debut = new Position(event.getLocation().getLineNumber(), event.getLocation().getColumnNumber());
                     fin = new Position(event.getLocation().getLineNumber(), event.getLocation().getColumnNumber() + originalText.length() - 1);
-//                    versionActuelle = originalText;
-                    resultat.add(new ResultatBalise(List.copyOf(balises),originalText,debut,fin));
+                    resultat.add(new ResultatBalise(List.copyOf(balises), originalText, debut, fin));
 
-                    // Remplacer le texte ici
-//                    String newText = "0.0.20-SNAPSHOT";
-                    //writer.add(eventFactory.createCharacters(newText));
-//                    } else {
-//                        writer.add(event);
-//                    }
                 } else if (event.isEndElement()) {
-//                    String tagName = event.asEndElement().getName().getLocalPart();
 
                     balises.removeLast();
-//                    if (tagName.equals("version")) {
-//                        insideNode2 = false;
-//                    } else if (tagName.equals("project")) {
-//                        insideNode1 = false;
-//                    }
-
-                    //writer.add(event);
-                } else {
-                    //writer.add(event); // commentaires, espaces, etc.
                 }
             }
 
-//            writer.flush();
-//            writer.close();
             reader.close();
         }
 
-        //Files.move(outputFile, inputFile, StandardCopyOption.REPLACE_EXISTING);
-//        if (debut != null && fin != null) {
-//            //afficheVersion(inputFile, debut, fin, versionActuelle);
-//
-//            //modifierFichier(inputFile.toString(), debut, fin, "0.0.20-SNAPSHOT");
-//        }
-
-//        LOGGER.info("Modification terminée !");
         return resultat;
     }
 
