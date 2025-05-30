@@ -1,6 +1,7 @@
 package org.jsystray.jsystray2.service;
 
 import org.jsystray.jsystray2.vo.Position;
+import org.jsystray.jsystray2.vo.PositionIndex;
 import org.jsystray.jsystray2.vo.ResultatBalise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,43 +68,43 @@ public class XmlParserService {
         char[] caracteres = contenu.toCharArray();
 
         // 2. Parcourir le tableau pour trouver les positions de début et fin
-        ProjetService.PositionIndex posDebut = trouverPosition(caracteres, debut);
-        ProjetService.PositionIndex posFin = trouverPosition(caracteres, fin);
+        PositionIndex posDebut = trouverPosition(caracteres, debut);
+        PositionIndex posFin = trouverPosition(caracteres, fin);
 
         // 3. Valider que les positions ont été trouvées
-        if (!posDebut.trouve) {
+        if (!posDebut.trouve()) {
             throw new IllegalArgumentException("Position de début " + debut + " non trouvée dans le fichier");
         }
-        if (!posFin.trouve) {
+        if (!posFin.trouve()) {
             throw new IllegalArgumentException("Position de fin " + fin + " non trouvée dans le fichier");
         }
-        if (posDebut.index > posFin.index) {
+        if (posDebut.index() > posFin.index()) {
             throw new IllegalArgumentException("La position de début doit être avant la position de fin");
         }
 
         // 4. Remplacer en mémoire dans le tableau de caractères
-        char[] nouveauContenu = remplacerDansTableau(caracteres, posDebut.index, posFin.index, nouveauTexte);
+        char[] nouveauContenu = remplacerDansTableau(caracteres, posDebut.index(), posFin.index(), nouveauTexte);
 
         // 5. Écrire le nouveau contenu dans le fichier
         Files.writeString(Paths.get(cheminFichier), new String(nouveauContenu));
 
-        System.out.println("Remplacement effectué :");
-        System.out.println("- Position début: " + debut + " (index " + posDebut.index + ")");
-        System.out.println("- Position fin: " + fin + " (index " + posFin.index + ")");
-        System.out.println("- Texte remplacé par: \"" + nouveauTexte + "\"");
+        LOGGER.info("Remplacement effectué :");
+        LOGGER.info("- Position début: " + debut + " (index " + posDebut.index() + ")");
+        LOGGER.info("- Position fin: " + fin + " (index " + posFin.index() + ")");
+        LOGGER.info("- Texte remplacé par: \"" + nouveauTexte + "\"");
     }
 
     /**
      * Parcourt le tableau de caractères pour trouver l'index correspondant à la position ligne/colonne
      */
-    private ProjetService.PositionIndex trouverPosition(char[] caracteres, Position position) {
+    private PositionIndex trouverPosition(char[] caracteres, Position position) {
         int ligneActuelle = 1;
         int colonneActuelle = 1;
 
         for (int i = 0; i < caracteres.length; i++) {
             // Vérifier si on a atteint la position recherchée
             if (ligneActuelle == position.ligne() && colonneActuelle == position.colonne()) {
-                return new ProjetService.PositionIndex(i, true);
+                return new PositionIndex(i, true);
             }
 
             // Gérer les sauts de ligne
@@ -127,10 +128,10 @@ public class XmlParserService {
 
         // Vérifier si la position est à la fin du fichier
         if (ligneActuelle == position.ligne() && colonneActuelle == position.colonne()) {
-            return new ProjetService.PositionIndex(caracteres.length, true);
+            return new PositionIndex(caracteres.length, true);
         }
 
-        return new ProjetService.PositionIndex(-1, false);
+        return new PositionIndex(-1, false);
     }
 
     /**
