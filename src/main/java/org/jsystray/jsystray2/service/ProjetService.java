@@ -1,6 +1,7 @@
 package org.jsystray.jsystray2.service;
 
 import jakarta.annotation.PostConstruct;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -24,6 +25,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
 
 import javax.xml.stream.*;
 import javax.xml.stream.events.XMLEvent;
@@ -33,8 +36,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -613,13 +620,60 @@ public class ProjetService {
         primaryStage.show();
 
         try {
-            int res = runService.runCommand(line -> {
-                LOGGER.info("run : {}", line);
-                //list.add(line.line());
+            final FluxSink<String> dataSink;
+//            Consumer<String> consumer= line->{
+//                Platform.runLater(() -> {
+//                    textArea.appendText(line + "\n");
+//                });
+//            };
+            Object[] tab=new Object[1];
+            Flux<String> stringFlux = Flux.create(sink -> {
+                tab[0]=sink;
+
+                try {
+                    int res = runService.runCommand(line -> {
+                        LOGGER.info("run : {}", line);
+                        //list.add(line.line());
 //                sb.append(line.line()+"\n");
-                textArea.appendText(line.line()+"\n");
-                }, "cmd","/C","mvn", "-f",selectedProduct.getFichierPom(),"dependency:tree");
-            LOGGER.info("resultat mvn : {}", res);
+                        sink.next(line.line());
+//                Platform.runLater(() -> {
+//                    textArea.appendText(line.line() + "\n");
+//                });
+                    }, "cmd", "/C", "mvn", "-f", selectedProduct.getFichierPom(), "dependency:tree");
+
+                    LOGGER.info("resultat mvn : {}", res);
+                }catch(Exception e){
+                    sink.error(new RuntimeException("erreur pour executer le programme",e));
+                }
+
+            });
+//            dataSink=(FluxSink<String>)Objects.requireNonNull(tab[0]);
+            stringFlux
+                    .buffer(Duration.of(200, ChronoUnit.MILLIS))
+                    .subscribe((List<String> lines) -> {
+                        Platform.runLater(() -> {
+                            StringBuilder sb = new StringBuilder();
+                            lines.forEach(line -> {
+                                sb.append(line).append("\n");
+                            });
+                            textArea.appendText(sb.toString());
+                        });
+                    },
+                            (error)->{
+                                LOGGER.error("Erreur", error);
+                            });
+
+//            int res = runService.runCommand(line -> {
+//                LOGGER.info("run : {}", line);
+//                //list.add(line.line());
+////                sb.append(line.line()+"\n");
+//                dataSink.next(line.line());
+////                Platform.runLater(() -> {
+////                    textArea.appendText(line.line() + "\n");
+////                });
+//                }, "cmd","/C","mvn", "-f",selectedProduct.getFichierPom(),"dependency:tree");
+
+            LOGGER.info("resultat mvn : {}", 0);
         }catch (Exception e){
             LOGGER.error("erreur mvn",e);
         }
