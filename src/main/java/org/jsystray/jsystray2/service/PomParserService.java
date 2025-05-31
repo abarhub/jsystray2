@@ -56,12 +56,13 @@ public class PomParserService {
         if (groupIdOpt.isPresent() && artifactIdOpt.isPresent()) {
             var groupId = groupIdOpt.get().valeur();
             var artifactId = artifactIdOpt.get().valeur();
-            if (StringUtils.isBlank(groupId) || StringUtils.isBlank(artifactId)) {
+            if (StringUtils.isNotBlank(groupId) || StringUtils.isNotBlank(artifactId)) {
                 try (var stream = Files.list(file.getParent())) {
                     List<Path> liste2 = stream
                             .filter(Files::isDirectory)
                             .filter(x -> Files.exists(x.resolve("pom.xml")))
                             .toList();
+                    LOGGER.info("liste2: {}",liste2);
                     for (var path : liste2) {
                         var file2 = path.resolve("pom.xml");
                         var resultat2 = xmlParserService.parse(file2, List.of(PROJET_PARENT_VERSION,
