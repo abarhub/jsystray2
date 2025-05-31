@@ -29,8 +29,6 @@ public class RunProcessUI extends AbstractViewUI {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RunProcessUI.class);
 
-
-
     public RunProcessUI(ConfigurableApplicationContext applicationContext) {
         super(applicationContext);
     }

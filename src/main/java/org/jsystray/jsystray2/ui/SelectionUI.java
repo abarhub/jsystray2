@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import java.nio.file.Path;
 import java.util.List;
 
 public class SelectionUI {
@@ -91,8 +92,8 @@ public class SelectionUI {
 
 
         // 4. Création du bouton de validation
-        Button validateButton2 = new Button("Valider la sélection2");
-        validateButton2.setOnAction(event -> {
+        Button updateVersionButton = new Button("Mise à jour de la version");
+        updateVersionButton.setOnAction(event -> {
             Projet selectedProduct = tableView.getSelectionModel().getSelectedItem();
             if (selectedProduct != null) {
                 try {
@@ -105,8 +106,8 @@ public class SelectionUI {
         });
 
         // 4. Création du bouton de validation
-        Button validateButton3 = new Button("Valider la sélection3");
-        validateButton3.setOnAction(event -> {
+        Button listDependenciesButton = new Button("Liste des dépendances");
+        listDependenciesButton.setOnAction(event -> {
             Projet selectedProduct = tableView.getSelectionModel().getSelectedItem();
             if (selectedProduct != null) {
                 try {
@@ -118,11 +119,28 @@ public class SelectionUI {
             }
         });
 
+        // 4. Création du bouton de validation
+        Button gitStatusButton = new Button("Status git");
+        gitStatusButton.setOnAction(event -> {
+            Projet selectedProduct = tableView.getSelectionModel().getSelectedItem();
+            if (selectedProduct != null) {
+                try {
+//                    ProjetService projetService = applicationContext.getBean("projetService", ProjetService.class);
+//                    projetService.dependancy(selectedProduct,applicationContext);
+                    GitStatusUI gitStatusUI = new GitStatusUI(applicationContext);
+                    gitStatusUI.run(Path.of(selectedProduct.getFichierPom()).getParent());
+                }catch (Exception e){
+                    LOGGER.error("Erreur", e);
+                }
+            }
+        });
+
         //VBox root = new VBox(new Text("texte"));
         VBox root = new VBox(10);
         root.setSpacing(10);
         root.setStyle("-fx-padding: 10;");
-        root.getChildren().addAll(tableView, validateButton, validateButton2, validateButton3);
+        root.getChildren().addAll(tableView, validateButton, updateVersionButton,
+                listDependenciesButton, gitStatusButton);
 
         Scene newScene = new Scene(root, 300, 200);
         newStage.setScene(newScene);
