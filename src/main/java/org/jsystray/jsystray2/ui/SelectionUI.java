@@ -27,9 +27,9 @@ public class SelectionUI {
         this.applicationContext = applicationContext;
     }
 
-    public void selection(String repertoire){
+    public void selection(String repertoire) {
 
-        var liste=listePom(repertoire);
+        var liste = listePom(repertoire);
 
         Stage newStage = new Stage();
         newStage.setTitle("selection");
@@ -51,13 +51,7 @@ public class SelectionUI {
         tableView.getColumns().addAll(nameColumn, descriptionColumn, priceColumn);
 
         // 3. Ajout de données d'exemple au TableView
-        ObservableList<Projet> products = FXCollections.observableArrayList(
-                /*new Product("Ordinateur Portable", "Puissant ordinateur portable pour le gaming et le travail", 1200.00),
-                new Product("Clavier Mécanique", "Clavier rétroéclairé avec switches MX Brown", 80.50),
-                new Product("Souris Gaming", "Souris haute précision avec capteur optique", 45.99),
-                new Product("Écran 27 pouces", "Moniteur Full HD avec dalle IPS", 250.00)*/
-                liste
-        );
+        ObservableList<Projet> products = FXCollections.observableArrayList(liste);
         tableView.setItems(products);
 
         // Permettre la sélection d'une seule ligne (par défaut, mais bon à spécifier)
@@ -99,7 +93,7 @@ public class SelectionUI {
                 try {
                     ProjetService projetService = applicationContext.getBean("projetService", ProjetService.class);
                     projetService.updateProject(selectedProduct);
-                }catch (Exception e){
+                } catch (Exception e) {
                     LOGGER.error("Erreur", e);
                 }
             }
@@ -112,8 +106,8 @@ public class SelectionUI {
             if (selectedProduct != null) {
                 try {
                     ProjetService projetService = applicationContext.getBean("projetService", ProjetService.class);
-                    projetService.dependancy(selectedProduct,applicationContext);
-                }catch (Exception e){
+                    projetService.dependancy(selectedProduct, applicationContext);
+                } catch (Exception e) {
                     LOGGER.error("Erreur", e);
                 }
             }
@@ -129,7 +123,7 @@ public class SelectionUI {
 //                    projetService.dependancy(selectedProduct,applicationContext);
                     GitStatusUI gitStatusUI = new GitStatusUI(applicationContext);
                     gitStatusUI.run(Path.of(selectedProduct.getFichierPom()).getParent());
-                }catch (Exception e){
+                } catch (Exception e) {
                     LOGGER.error("Erreur", e);
                 }
             }
@@ -142,16 +136,15 @@ public class SelectionUI {
         root.getChildren().addAll(tableView, validateButton, updateVersionButton,
                 listDependenciesButton, gitStatusButton);
 
-        Scene newScene = new Scene(root, 300, 200);
+        Scene newScene = new Scene(root, 500, 700);
         newStage.setScene(newScene);
         newStage.show();
     }
 
 
     private List<Projet> listePom(String fichier) {
-//        ProjetService projetService=applicationContext.getBean(ProjetService.class);
-        ProjetService projetService=applicationContext.getBean("projetService",ProjetService.class);
-        if(fichier!=null){
+        ProjetService projetService = applicationContext.getBean("projetService", ProjetService.class);
+        if (fichier != null) {
             return projetService.getProjets(fichier);
         } else {
             return projetService.getProjets();

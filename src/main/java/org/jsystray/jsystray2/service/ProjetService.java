@@ -196,8 +196,6 @@ public class ProjetService {
     }
 
     public void updateProject(Projet selectedProduct) throws Exception {
-//        updateProject2(selectedProduct);
-//        updateProject3(selectedProduct);
         updateProject4(selectedProduct);
     }
 
@@ -254,13 +252,20 @@ public class ProjetService {
                     message = "Veuillez saisir une valeur pour 'Autre'.";
                 } else {
                     message = "Option sélectionnée : Autre, Valeur saisie : " + textField.getText();
+                    var version = textField.getText();
+                    if (StringUtils.isNotBlank(version)) {
+                        try {
+                            this.XmlParserService.modifierFichier(inputFile.toString(), debut, fin, version);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
                 }
             } else {
                 var version = map.get(selectedOption);
                 message = "Option sélectionnée : " + selectedOption + " (" + version + ")";
                 if (StringUtils.isNotBlank(version)) {
                     try {
-                        //modifierFichier(inputFile.toString(), debut, fin, version);
                         this.XmlParserService.modifierFichier(inputFile.toString(), debut, fin, version);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -278,7 +283,7 @@ public class ProjetService {
         root.getChildren().addAll(comboBox, textField, validateButton, messageLabel);
 
         // 7. Création de la scène et affichage de la fenêtre
-        Scene scene = new Scene(root, 400, 250); // Largeur, Hauteur
+        Scene scene = new Scene(root, 600, 300); // Largeur, Hauteur
         primaryStage.setScene(scene);
         primaryStage.show();
     }
