@@ -1,13 +1,16 @@
 package org.jsystray.jsystray2.service;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.api.AddCommand;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.jsystray.jsystray2.vo.ResultatBalise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -41,12 +44,25 @@ public class PomParserService {
                 var versionOld = versionOpt.get();
                 LOGGER.info("version: {} <> {} (fichier: {})", versionOld.valeur(), version,file);
                 xmlParserService.modifierFichier(file.toString(), versionOld.positionDebut(), versionOld.positionFin(), version);
-                updateEnfantPom(resultat,file,version);
+                FileRepositoryBuilder repositoryBuilder = new FileRepositoryBuilder();
+                Repository repository = repositoryBuilder.setGitDir(file.getParent().resolve(".git").toFile())
+                        .readEnvironment() // Lire GIT_DIR et d'autres variables d'environnement
+                        .findGitDir() // Chercher le répertoire .git
+                        .build();
+                try (Git git = new Git(repository)) {
+
+                    AddCommand add = git.add();
+                    add.addFilepattern(file.getFileName().toString()).call();
+
+                    updateEnfantPom(resultat, file, version, git);
+
+                    git.commit().setMessage("chore(version): préparation de la version "+version).call();
+                }
             }
         }
     }
 
-    private void updateEnfantPom(List<ResultatBalise> resultat,final Path file, final String version) throws Exception {
+    private void updateEnfantPom(List<ResultatBalise> resultat, final Path file, final String version, Git git) throws Exception {
         var groupIdOpt = resultat.stream()
                 .filter(x -> Objects.equals(x.balises(), PROJET_GROUPEID))
                 .findFirst();
@@ -83,6 +99,8 @@ public class PomParserService {
                                     LOGGER.info("version parent: {} <> {} (fichier: {})", versionParent.valeur(), version,file2);
                                     xmlParserService.modifierFichier(file2.toString(), versionParent.positionDebut(),
                                             versionParent.positionFin(), version);
+                                    AddCommand add = git.add();
+                                    add.addFilepattern(file2.toString()).call();
                                 }
                             }
                         }
