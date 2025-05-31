@@ -41,6 +41,9 @@ public class ProjetService {
     @Autowired
     private XmlParserService XmlParserService;
 
+    @Autowired
+    private PomParserService pomParserService;
+
     public ProjetService() {
         LOGGER.info("creation repertoireProjet: {}", repertoireProjet);
     }
@@ -255,8 +258,9 @@ public class ProjetService {
                     var version = textField.getText();
                     if (StringUtils.isNotBlank(version)) {
                         try {
-                            this.XmlParserService.modifierFichier(inputFile.toString(), debut, fin, version);
-                        } catch (IOException e) {
+                            pomParserService.updateVersion(inputFile,version);
+//                            this.XmlParserService.modifierFichier(inputFile.toString(), debut, fin, version);
+                        } catch (Exception e) {
                             throw new RuntimeException(e);
                         }
                     }
@@ -266,8 +270,9 @@ public class ProjetService {
                 message = "Option sélectionnée : " + selectedOption + " (" + version + ")";
                 if (StringUtils.isNotBlank(version)) {
                     try {
-                        this.XmlParserService.modifierFichier(inputFile.toString(), debut, fin, version);
-                    } catch (IOException e) {
+                        //this.XmlParserService.modifierFichier(inputFile.toString(), debut, fin, version);
+                        pomParserService.updateVersion(inputFile,version);
+                    } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 }
