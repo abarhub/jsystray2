@@ -100,7 +100,7 @@ public class PomParserService {
                                     xmlParserService.modifierFichier(file2.toString(), versionParent.positionDebut(),
                                             versionParent.positionFin(), version);
                                     AddCommand add = git.add();
-                                    add.addFilepattern(file2.toString()).call();
+                                    add.addFilepattern(path.getFileName()+"/"+file2.getFileName().toString()).call();
                                 }
                             }
                         }
