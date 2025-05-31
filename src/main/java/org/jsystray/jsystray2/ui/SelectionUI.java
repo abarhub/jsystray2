@@ -111,7 +111,7 @@ public class SelectionUI {
             if (selectedProduct != null) {
                 try {
                     ProjetService projetService = applicationContext.getBean("projetService", ProjetService.class);
-                    projetService.dependancy(selectedProduct);
+                    projetService.dependancy(selectedProduct,applicationContext);
                 }catch (Exception e){
                     LOGGER.error("Erreur", e);
                 }
