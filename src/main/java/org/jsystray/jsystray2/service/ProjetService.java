@@ -50,17 +50,25 @@ public class ProjetService {
         LOGGER.info("init repertoireProjet: {}", repertoireProjet);
     }
 
+    public List<Projet> getProjets(String directoryPath) {
+        LOGGER.info("répertoire: {}", directoryPath);
+        if (directoryPath == null || directoryPath.isEmpty()) {
+            throw new RuntimeException("Répertoire vide");
+        }
+        return listePom(directoryPath);
+    }
+
     public List<Projet> getProjets() {
         LOGGER.info("répertoire: {}", repertoireProjet);
         if (repertoireProjet == null || repertoireProjet.isEmpty()) {
             throw new RuntimeException("Répertoire vide");
         }
-        return listePom();
+        return listePom(repertoireProjet);
     }
 
 
-    private List<Projet> listePom() {
-        String directoryPath = repertoireProjet; // Remplacez par le chemin de votre répertoire
+    private List<Projet> listePom(String directoryPath) {
+        //String directoryPath = repertoireProjet; // Remplacez par le chemin de votre répertoire
         Path p = Paths.get(directoryPath).toAbsolutePath().normalize();
 
 

@@ -27,9 +27,9 @@ public class SelectionUI {
         this.applicationContext = applicationContext;
     }
 
-    public void selection(){
+    public void selection(String repertoire){
 
-        var liste=listePom();
+        var liste=listePom(repertoire);
 
         Stage newStage = new Stage();
         newStage.setTitle("selection");
@@ -148,9 +148,13 @@ public class SelectionUI {
     }
 
 
-    private List<Projet> listePom() {
+    private List<Projet> listePom(String fichier) {
 //        ProjetService projetService=applicationContext.getBean(ProjetService.class);
         ProjetService projetService=applicationContext.getBean("projetService",ProjetService.class);
-        return projetService.getProjets();
+        if(fichier!=null){
+            return projetService.getProjets(fichier);
+        } else {
+            return projetService.getProjets();
+        }
     }
 }

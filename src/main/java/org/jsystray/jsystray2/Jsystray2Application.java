@@ -3,40 +3,27 @@ package org.jsystray.jsystray2;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.DirectoryChooser;
 import org.jsystray.jsystray2.config.AppConfig;
 import org.jsystray.jsystray2.service.ProjetService;
 import org.jsystray.jsystray2.ui.SelectionUI;
 import org.jsystray.jsystray2.vo.Projet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
-import javafx.application.Application;
-import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 import javafx.scene.text.Text; // Pour le contenu des nouvelles fenêtres
 
-import java.io.IOException;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
+import java.io.File;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 //@SpringBootApplication
 public class Jsystray2Application extends Application  {
@@ -92,7 +79,10 @@ public class Jsystray2Application extends Application  {
         Menu fileMenu = new Menu("Fichier");
 
         MenuItem newItem = new MenuItem("Nouveau");
-        newItem.setOnAction(e -> openNewWindow("Nouvelle Fenêtre", "Ceci est la fenêtre 'Nouveau'."));
+        newItem.setOnAction(e -> {
+            //openNewWindow("Nouvelle Fenêtre", "Ceci est la fenêtre 'Nouveau'.")
+            selectionRepertoire(primaryStage);
+        });
 
         MenuItem openItem = new MenuItem("Ouvrir");
         openItem.setOnAction(e -> openNewWindow("Fenêtre d'Ouverture", "Ceci est la fenêtre 'Ouvrir'."));
@@ -138,6 +128,16 @@ public class Jsystray2Application extends Application  {
         return root;
     }
 
+    private void selectionRepertoire(Stage primaryStage) {
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+//        directoryChooser.setInitialDirectory(new File("src"));
+        File selectedDirectory = directoryChooser.showDialog(primaryStage);
+        if(selectedDirectory!=null){
+            var selection=new SelectionUI(applicationContext);
+            selection.selection(selectedDirectory.getAbsolutePath());
+        }
+    }
+
     /**
      * Méthode générique pour ouvrir une nouvelle fenêtre.
      * @param title Le titre de la nouvelle fenêtre.
@@ -158,7 +158,7 @@ public class Jsystray2Application extends Application  {
 
     private void selection(){
         var selection=new SelectionUI(applicationContext);
-        selection.selection();
+        selection.selection(null);
     }
 
     private void selection2(){
