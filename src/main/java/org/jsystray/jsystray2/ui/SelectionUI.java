@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -129,16 +130,43 @@ public class SelectionUI {
             }
         });
 
+        // 4. Création du bouton de validation
+        Button testExecButton = new Button("test exec");
+        testExecButton.setOnAction(event -> {
+            executeTest();
+        });
+
         //VBox root = new VBox(new Text("texte"));
         VBox root = new VBox(10);
         root.setSpacing(10);
         root.setStyle("-fx-padding: 10;");
         root.getChildren().addAll(tableView, validateButton, updateVersionButton,
-                listDependenciesButton, gitStatusButton);
+                listDependenciesButton, gitStatusButton, testExecButton);
 
         Scene newScene = new Scene(root, 500, 700);
         newStage.setScene(newScene);
         newStage.show();
+    }
+
+    private void executeTest() {
+        try {
+            if(false) {
+                LOGGER.info("execution ...");
+                // Ouvre une nouvelle fenêtre de l'invite de commandes (cmd.exe)
+                Runtime.getRuntime().exec("cmd /c start cmd");
+                LOGGER.info("execution ok");
+            } else {
+                LOGGER.info("execution 2 ...");
+                ProcessBuilder pb = new ProcessBuilder("cmd", "/c", "start", "cmd");
+                LOGGER.info("starting process");
+                pb.start();
+                LOGGER.info("waiting for process");
+                pb.wait();
+                LOGGER.info("execution 2 ok");
+            }
+        } catch (Exception e) {
+            LOGGER.error("Erreur", e);
+        }
     }
 
 
