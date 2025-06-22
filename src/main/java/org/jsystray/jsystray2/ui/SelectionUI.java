@@ -71,73 +71,115 @@ public class SelectionUI {
         // 4. Création du bouton de validation
         Button validateButton = new Button("Valider la sélection");
         validateButton.setOnAction(event -> {
-            Projet selectedProduct = tableView.getSelectionModel().getSelectedItem();
-            if (selectedProduct != null) {
-                // Affiche les informations de la ligne sélectionnée
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Projet sélectionné");
-                alert.setHeaderText(null);
-                alert.setContentText("Vous avez sélectionné : \n" +
-                        "Nom: " + selectedProduct.getNom() + "\n" +
-                        "Description: " + selectedProduct.getDescription() + "\n" +
-                        "Répertoire: " + String.format("%s", selectedProduct.getRepertoire()));
-                alert.showAndWait();
+            tableView.getSelectionModel().getSelectedItems().stream().forEach(item -> {
+                        Projet selectedProduct = item;
+                if (selectedProduct != null) {
+                    // Affiche les informations de la ligne sélectionnée
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Projet sélectionné");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Vous avez sélectionné : \n" +
+                            "Nom: " + selectedProduct.getNom() + "\n" +
+                            "Description: " + selectedProduct.getDescription() + "\n" +
+                            "Répertoire: " + String.format("%s", selectedProduct.getRepertoire()));
+                    alert.showAndWait();
 
-                // Vous pouvez faire d'autres actions ici, par exemple :
-                // - Fermer la fenêtre : primaryStage.close();
-                // - Passer la sélection à une autre partie de votre application
-            } else {
-                Alert alert = new Alert(Alert.AlertType.WARNING);
-                alert.setTitle("Aucune sélection");
-                alert.setHeaderText(null);
-                alert.setContentText("Veuillez sélectionner une ligne avant de valider.");
-                alert.showAndWait();
-            }
+                    // Vous pouvez faire d'autres actions ici, par exemple :
+                    // - Fermer la fenêtre : primaryStage.close();
+                    // - Passer la sélection à une autre partie de votre application
+                }
+                    });
+//            Projet selectedProduct = tableView.getSelectionModel().getSelectedItem();
+//            if (selectedProduct != null) {
+//                // Affiche les informations de la ligne sélectionnée
+//                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+//                alert.setTitle("Projet sélectionné");
+//                alert.setHeaderText(null);
+//                alert.setContentText("Vous avez sélectionné : \n" +
+//                        "Nom: " + selectedProduct.getNom() + "\n" +
+//                        "Description: " + selectedProduct.getDescription() + "\n" +
+//                        "Répertoire: " + String.format("%s", selectedProduct.getRepertoire()));
+//                alert.showAndWait();
+//
+//                // Vous pouvez faire d'autres actions ici, par exemple :
+//                // - Fermer la fenêtre : primaryStage.close();
+//                // - Passer la sélection à une autre partie de votre application
+//            } else {
+//                Alert alert = new Alert(Alert.AlertType.WARNING);
+//                alert.setTitle("Aucune sélection");
+//                alert.setHeaderText(null);
+//                alert.setContentText("Veuillez sélectionner une ligne avant de valider.");
+//                alert.showAndWait();
+//            }
         });
 
 
         // 4. Création du bouton de validation
         Button updateVersionButton = new Button("Mise à jour de la version");
         updateVersionButton.setOnAction(event -> {
-            Projet selectedProduct = tableView.getSelectionModel().getSelectedItem();
-            if (selectedProduct != null) {
-                try {
-                    ProjetService projetService = applicationContext.getBean("projetService", ProjetService.class);
-                    projetService.updateProject(selectedProduct);
-                } catch (Exception e) {
-                    LOGGER.error("Erreur", e);
+            tableView.getSelectionModel().getSelectedItems().stream().forEach(item -> {
+                Projet selectedProduct = item;
+                if (selectedProduct != null) {
+                    try {
+                        ProjetService projetService = applicationContext.getBean("projetService", ProjetService.class);
+                        projetService.updateProject(selectedProduct);
+                    } catch (Exception e) {
+                        LOGGER.error("Erreur", e);
+                    }
                 }
-            }
+            });
+//            Projet selectedProduct = tableView.getSelectionModel().getSelectedItem();
+//            if (selectedProduct != null) {
+//                try {
+//                    ProjetService projetService = applicationContext.getBean("projetService", ProjetService.class);
+//                    projetService.updateProject(selectedProduct);
+//                } catch (Exception e) {
+//                    LOGGER.error("Erreur", e);
+//                }
+//            }
         });
 
         // 4. Création du bouton de validation
         Button listDependenciesButton = new Button("Liste des dépendances");
         listDependenciesButton.setOnAction(event -> {
-            Projet selectedProduct = tableView.getSelectionModel().getSelectedItem();
-            if (selectedProduct != null) {
-                try {
-                    ProjetService projetService = applicationContext.getBean("projetService", ProjetService.class);
-                    projetService.dependancy(selectedProduct, applicationContext);
-                } catch (Exception e) {
-                    LOGGER.error("Erreur", e);
+//            Projet selectedProduct = tableView.getSelectionModel().getSelectedItem();
+            tableView.getSelectionModel().getSelectedItems().stream().forEach(item -> {
+                Projet selectedProduct = item;
+                if (selectedProduct != null) {
+                    try {
+                        ProjetService projetService = applicationContext.getBean("projetService", ProjetService.class);
+                        projetService.dependancy(selectedProduct, applicationContext);
+                    } catch (Exception e) {
+                        LOGGER.error("Erreur", e);
+                    }
                 }
-            }
+            });
+//            if (selectedProduct != null) {
+//                try {
+//                    ProjetService projetService = applicationContext.getBean("projetService", ProjetService.class);
+//                    projetService.dependancy(selectedProduct, applicationContext);
+//                } catch (Exception e) {
+//                    LOGGER.error("Erreur", e);
+//                }
+//            }
         });
 
         // 4. Création du bouton de validation
         Button gitStatusButton = new Button("Status git");
         gitStatusButton.setOnAction(event -> {
-            Projet selectedProduct = tableView.getSelectionModel().getSelectedItem();
-            if (selectedProduct != null) {
-                try {
+            tableView.getSelectionModel().getSelectedItems().stream().forEach(item -> {
+                Projet selectedProduct = item;
+                if (selectedProduct != null) {
+                    try {
 //                    ProjetService projetService = applicationContext.getBean("projetService", ProjetService.class);
 //                    projetService.dependancy(selectedProduct,applicationContext);
-                    GitStatusUI gitStatusUI = new GitStatusUI(applicationContext);
-                    gitStatusUI.run(Path.of(selectedProduct.getFichierPom()).getParent());
-                } catch (Exception e) {
-                    LOGGER.error("Erreur", e);
+                        GitStatusUI gitStatusUI = new GitStatusUI(applicationContext);
+                        gitStatusUI.run(Path.of(selectedProduct.getFichierPom()).getParent());
+                    } catch (Exception e) {
+                        LOGGER.error("Erreur", e);
+                    }
                 }
-            }
+            });
         });
 
         // 4. Création du bouton de validation
