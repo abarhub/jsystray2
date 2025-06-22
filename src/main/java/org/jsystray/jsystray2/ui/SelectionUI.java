@@ -45,11 +45,20 @@ public class SelectionUI {
         TableColumn<Projet, String> descriptionColumn = new TableColumn<>("répertoire");
         descriptionColumn.setCellValueFactory(new PropertyValueFactory<>("repertoire"));
 
-        TableColumn<Projet, String> priceColumn = new TableColumn<>("pom");
-        priceColumn.setCellValueFactory(new PropertyValueFactory<>("fichierPom"));
+        TableColumn<Projet, String> pomColumn = new TableColumn<>("pom");
+        pomColumn.setCellValueFactory(new PropertyValueFactory<>("fichierPom"));
+
+        TableColumn<Projet, String> packageJsonColumn = new TableColumn<>("packageJson");
+        packageJsonColumn.setCellValueFactory(new PropertyValueFactory<>("packageJson"));
+
+        TableColumn<Projet, String> goModColumn = new TableColumn<>("goMod");
+        goModColumn.setCellValueFactory(new PropertyValueFactory<>("goMod"));
+
+        TableColumn<Projet, String> cargoTomlColumn = new TableColumn<>("cargoToml");
+        cargoTomlColumn.setCellValueFactory(new PropertyValueFactory<>("cargoToml"));
 
         // Ajout des colonnes au TableView
-        tableView.getColumns().addAll(nameColumn, descriptionColumn, priceColumn);
+        tableView.getColumns().addAll(nameColumn, descriptionColumn, pomColumn, packageJsonColumn, goModColumn, cargoTomlColumn);
 
         // 3. Ajout de données d'exemple au TableView
         ObservableList<Projet> products = FXCollections.observableArrayList(liste);

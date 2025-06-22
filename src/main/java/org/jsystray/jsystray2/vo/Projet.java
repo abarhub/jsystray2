@@ -6,6 +6,9 @@ public class Projet {
     private String description;
     private String repertoire;
     private String fichierPom;
+    private String packageJson;
+    private String goMod;
+    private String cargoToml;
 
     public String getNom() {
         return nom;
@@ -37,5 +40,29 @@ public class Projet {
 
     public void setFichierPom(String fichierPom) {
         this.fichierPom = fichierPom;
+    }
+
+    public String getPackageJson() {
+        return packageJson;
+    }
+
+    public void setPackageJson(String packageJson) {
+        this.packageJson = packageJson;
+    }
+
+    public String getGoMod() {
+        return goMod;
+    }
+
+    public void setGoMod(String goMod) {
+        this.goMod = goMod;
+    }
+
+    public String getCargoToml() {
+        return cargoToml;
+    }
+
+    public void setCargoToml(String cargoToml) {
+        this.cargoToml = cargoToml;
     }
 }
