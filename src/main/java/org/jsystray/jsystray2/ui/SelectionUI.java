@@ -65,7 +65,8 @@ public class SelectionUI {
         tableView.setItems(products);
 
         // Permettre la sélection d'une seule ligne (par défaut, mais bon à spécifier)
-        tableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+//        tableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         // 4. Création du bouton de validation
         Button validateButton = new Button("Valider la sélection");
