@@ -16,6 +16,7 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.RemoteConfig;
@@ -392,7 +393,8 @@ public class StatusGlobalUI extends AbstractViewUI {
         sb.append("\n=== Branches Locales ===");
         List<Ref> localBranches = git.branchList().call();
         for (Ref branch : localBranches) {
-            sb.append("\n  - " + branch.getName() + " -> " + branch.getObjectId().getName());
+            sb.append("\n  - " + branch.getName() + " -> " + branch.getObjectId().getName()+
+                    "   (date:"+getDate(branch,git.getRepository())+")");
         }
         sb.append("\n");
 
@@ -402,7 +404,8 @@ public class StatusGlobalUI extends AbstractViewUI {
         sb.append("\n=== Branches Distantes (après fetch) ===");
         List<Ref> remoteBranches = git.branchList().setListMode(ListBranchCommand.ListMode.REMOTE).call();
         for (Ref branch : remoteBranches) {
-            sb.append("\n  - " + branch.getName() + " -> " + branch.getObjectId().getName());
+            sb.append("\n  - " + branch.getName() + " -> " + branch.getObjectId().getName()+
+                    "   (date:"+getDate(branch,git.getRepository())+")");
         }
         sb.append("\n");
 
@@ -426,8 +429,28 @@ public class StatusGlobalUI extends AbstractViewUI {
                     .setTags(false) // Ne pas montrer les tags
                     .call()
                     .forEach(ref -> {
-                        sb.append("\n    - " + ref.getName() + " -> " + ref.getObjectId().getName());
+                        sb.append("\n    - " + ref.getName() + " -> " + ref.getObjectId().getName()+
+                                "   (date:"+getDate(ref,git.getRepository())+")");
                     });
+        }
+    }
+
+    private String getDate(Ref ref, Repository repository) {
+        try {
+            try (RevWalk revWalk = new RevWalk(repository)) {
+                RevCommit commit = revWalk.parseCommit(ref.getObjectId());
+
+                // getCommitTime() retourne un timestamp UNIX (secondes depuis epoch)
+                int commitTime = commit.getCommitTime();
+
+                // Convertir en date lisible
+                java.util.Date date = new java.util.Date(commitTime * 1000L);
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                return  sdf.format(date);
+            }
+        }catch (Exception e) {
+            LOGGER.error("Erreur lors de la commit : {}", ref, e);
+            return "";
         }
     }
 }
