@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -72,7 +71,7 @@ public class SelectionUI {
         Button validateButton = new Button("Valider la sélection");
         validateButton.setOnAction(event -> {
             tableView.getSelectionModel().getSelectedItems().stream().forEach(item -> {
-                        Projet selectedProduct = item;
+                Projet selectedProduct = item;
                 if (selectedProduct != null) {
                     // Affiche les informations de la ligne sélectionnée
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -88,7 +87,7 @@ public class SelectionUI {
                     // - Fermer la fenêtre : primaryStage.close();
                     // - Passer la sélection à une autre partie de votre application
                 }
-                    });
+            });
 //            Projet selectedProduct = tableView.getSelectionModel().getSelectedItem();
 //            if (selectedProduct != null) {
 //                // Affiche les informations de la ligne sélectionnée
@@ -124,7 +123,7 @@ public class SelectionUI {
                         ProjetService projetService = applicationContext.getBean("projetService", ProjetService.class);
                         projetService.updateProject(selectedProduct);
                     } catch (Exception e) {
-                        LOGGER.error("Erreur", e);
+                        LOGGER.error("Erreur pour le projet {}", selectedProduct.getRepertoire(), e);
                     }
                 }
             });
@@ -150,7 +149,7 @@ public class SelectionUI {
                         ProjetService projetService = applicationContext.getBean("projetService", ProjetService.class);
                         projetService.dependancy(selectedProduct, applicationContext);
                     } catch (Exception e) {
-                        LOGGER.error("Erreur", e);
+                        LOGGER.error("Erreur pour le projet {}", selectedProduct.getRepertoire(), e);
                     }
                 }
             });
@@ -176,7 +175,7 @@ public class SelectionUI {
                         GitStatusUI gitStatusUI = new GitStatusUI(applicationContext);
                         gitStatusUI.run(Path.of(selectedProduct.getFichierPom()).getParent());
                     } catch (Exception e) {
-                        LOGGER.error("Erreur", e);
+                        LOGGER.error("Erreur pour le projet {}", selectedProduct.getRepertoire(), e);
                     }
                 }
             });
@@ -188,12 +187,31 @@ public class SelectionUI {
             executeTest();
         });
 
+        // 4. Création du bouton de validation
+        Button statusGlobalButton = new Button("status global");
+        statusGlobalButton.setOnAction(event -> {
+            tableView.getSelectionModel().getSelectedItems().stream().forEach(item -> {
+                //LOGGER.info("selection ...");
+                Projet selectedProduct = item;
+                if (selectedProduct != null) {
+                    try {
+                        //LOGGER.info("selection: {}", selectedProduct);
+                        StatusGlobalUI statusGlobalUI = new StatusGlobalUI(applicationContext);
+                        statusGlobalUI.run(selectedProduct);
+                    } catch (Exception e) {
+                        LOGGER.error("Erreur pour le projet {}", selectedProduct.getRepertoire(), e);
+                    }
+                }
+            });
+        });
+
         //VBox root = new VBox(new Text("texte"));
         VBox root = new VBox(10);
         root.setSpacing(10);
         root.setStyle("-fx-padding: 10;");
         root.getChildren().addAll(tableView, validateButton, updateVersionButton,
-                listDependenciesButton, gitStatusButton, testExecButton);
+                listDependenciesButton, gitStatusButton, testExecButton,
+                statusGlobalButton);
 
         Scene newScene = new Scene(root, 500, 700);
         newStage.setScene(newScene);
@@ -202,7 +220,7 @@ public class SelectionUI {
 
     private void executeTest() {
         try {
-            if(false) {
+            if (false) {
                 LOGGER.info("execution ...");
                 // Ouvre une nouvelle fenêtre de l'invite de commandes (cmd.exe)
                 Runtime.getRuntime().exec("cmd /c start cmd");
