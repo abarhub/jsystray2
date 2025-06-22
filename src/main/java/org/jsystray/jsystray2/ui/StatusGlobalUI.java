@@ -1,5 +1,7 @@
 package org.jsystray.jsystray2.ui;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.scene.control.TextArea;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.Model;
@@ -87,6 +89,104 @@ public class StatusGlobalUI extends AbstractViewUI {
 
         if (StringUtils.isNotBlank(projet.getFichierPom())) {
             Path pomFile = Path.of(projet.getFichierPom());
+
+            analysePom(pomFile, resultat);
+        }
+
+        if (StringUtils.isNotBlank(projet.getPackageJson())) {
+            Path jsonFile = Path.of(projet.getPackageJson());
+
+            analysePackageJson(jsonFile, resultat);
+        }
+
+        if (StringUtils.isNotBlank(projet.getGoMod())) {
+            analyseGoMod(projet.getGoMod(), resultat);
+        }
+
+        if (StringUtils.isNotBlank(projet.getCargoToml())) {
+            analyseCargo(projet.getCargoToml(), resultat);
+        }
+
+        return resultat.toString();
+    }
+
+    private void analyseCargo(String cargoToml, StringBuilder resultat) throws IOException {
+        if (StringUtils.isNotBlank(cargoToml)) {
+            Path path = Paths.get(cargoToml);
+            if (Files.exists(path)) {
+                resultat.append("fichier cargo ").append(cargoToml).append("\n");
+                List<String> liste = Files.readAllLines(path);
+                for (String line : liste) {
+                    resultat.append(line).append("\n");
+                }
+            }
+        }
+    }
+
+    private void analyseGoMod(String goMod, StringBuilder resultat) throws IOException {
+        if (StringUtils.isNotBlank(goMod)) {
+            Path path = Paths.get(goMod);
+            if (Files.exists(path)) {
+                resultat.append("fichier go projet ").append(goMod).append("\n");
+                List<String> liste = Files.readAllLines(path);
+                for (String line : liste) {
+                    resultat.append(line).append("\n");
+                }
+            }
+        }
+    }
+
+    private void analysePackageJson(Path jsonFile, StringBuilder resultat) throws IOException {
+
+        if (Files.exists(jsonFile)) {
+
+            ObjectMapper mapper = new ObjectMapper();
+
+            try (var reader = Files.newBufferedReader(jsonFile)) {
+                JsonNode node = mapper.reader().readTree(reader);
+
+                resultat.append("fichier ").append(jsonFile).append("\n");
+                if (node.has("name")) {
+                    resultat.append("nom:").append(node.get("name")).append("\n");
+                }
+                if (node.has("version")) {
+                    resultat.append("version:").append(node.get("version")).append("\n");
+                }
+                if (node.has("scripts")) {
+                    resultat.append("script:").append("\n");
+                    List<String> liste = new ArrayList<>();
+                    for (var script : node.get("scripts").properties()) {
+                        liste.add(script.getKey() + ":" + script.getValue().toString());
+                    }
+                    Collections.sort(liste);
+                    liste.forEach(x -> resultat.append("\t").append(x).append("\n"));
+                }
+                if (node.has("dependencies")) {
+                    resultat.append("dependencies:").append("\n");
+                    List<String> liste = new ArrayList<>();
+                    for (var script : node.get("dependencies").properties()) {
+                        liste.add(script.getKey() + ":" + script.getValue().toString());
+                    }
+                    Collections.sort(liste);
+                    liste.forEach(x -> resultat.append("\t").append(x).append("\n"));
+                }
+                if (node.has("devDependencies")) {
+                    resultat.append("devDependencies:").append("\n");
+                    List<String> liste = new ArrayList<>();
+                    for (var script : node.get("devDependencies").properties()) {
+                        liste.add(script.getKey() + ":" + script.getValue().toString());
+                    }
+                    Collections.sort(liste);
+                    liste.forEach(x -> resultat.append("\t").append(x).append("\n"));
+                }
+            }
+
+        }
+
+    }
+
+    private void analysePom(Path pomFile, StringBuilder resultat) throws IOException {
+        if (pomFile != null) {
             if (Files.exists(pomFile)) {
 
                 MavenXpp3Reader reader = new MavenXpp3Reader();
@@ -136,11 +236,27 @@ public class StatusGlobalUI extends AbstractViewUI {
                     }
                 }
 
+                // analyse des enfants
+
+                var liste = Files.list(pomFile.getParent())
+                        .filter(Files::isDirectory)
+                        .toList();
+
+                for (var f : liste) {
+                    var f2 = f.resolve("pom.xml");
+                    if (Files.exists(f2)) {
+                        resultat.append("* enfant ").append(f.getFileName()).append(" :").append("\n");
+                        analysePom(f2, resultat);
+
+                        var f3 = f.resolve("package.json");
+                        if (Files.exists(f3)) {
+                            analysePackageJson(f3, resultat);
+                        }
+                    }
+                }
+
             }
         }
-
-
-        return resultat.toString();
     }
 
     private String getStatus(Path file) {
