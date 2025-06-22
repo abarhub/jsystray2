@@ -7,6 +7,8 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import org.jsystray.jsystray2.properties.AppProperties;
+import org.jsystray.jsystray2.properties.RunMavenProperties;
 import org.jsystray.jsystray2.service.ProjetService;
 import org.jsystray.jsystray2.vo.Projet;
 import org.slf4j.Logger;
@@ -15,6 +17,9 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class SelectionUI {
 
@@ -205,17 +210,67 @@ public class SelectionUI {
             });
         });
 
+        // 4. Création du bouton de validation
+        Button runMavenButton = new Button("Run Maven command");
+        runMavenButton.setOnAction(event -> {
+
+            runMaven(tableView);
+
+
+        });
+
         //VBox root = new VBox(new Text("texte"));
         VBox root = new VBox(10);
         root.setSpacing(10);
         root.setStyle("-fx-padding: 10;");
         root.getChildren().addAll(tableView, validateButton, updateVersionButton,
                 listDependenciesButton, gitStatusButton, testExecButton,
-                statusGlobalButton);
+                statusGlobalButton, runMavenButton);
 
         Scene newScene = new Scene(root, 500, 700);
         newStage.setScene(newScene);
         newStage.show();
+    }
+
+    private void runMaven(TableView<Projet> tableView) {
+        List<String> choix;
+
+        AppProperties appProperties = applicationContext.getBean(AppProperties.class);
+        var conf = appProperties.getRunMaven();
+        choix = conf.stream().map(RunMavenProperties::getNom).collect(Collectors.toList());
+
+        ChoiceDialog<String> dialog = new ChoiceDialog<>(choix.get(0), choix);
+        dialog.setTitle("Sélection");
+        dialog.setHeaderText("Veuillez choisir une option");
+        dialog.setContentText("Choix :");
+
+        Optional<String> result = dialog.showAndWait();
+        result.ifPresent(selected -> {
+            LOGGER.info("Option choisie : " + selected);
+
+            tableView.getSelectionModel().getSelectedItems().stream().forEach(item -> {
+                Projet selectedProduct = item;
+                if (selectedProduct != null) {
+                    try {
+//                    ProjetService projetService = applicationContext.getBean("projetService", ProjetService.class);
+//                    projetService.dependancy(selectedProduct,applicationContext);
+                        var actionOpt = conf.stream()
+                                .filter(x -> Objects.equals(x.getNom(), selected))
+                                .findFirst();
+                        if (actionOpt.isPresent()) {
+                            var action = actionOpt.get();
+
+                            RunMavenUI runMavenUI = new RunMavenUI(applicationContext);
+                            runMavenUI.run(selectedProduct, action.getCommande());
+                        }
+
+                    } catch (Exception e) {
+                        LOGGER.error("Erreur pour le projet {}", selectedProduct.getRepertoire(), e);
+                    }
+                }
+            });
+
+        });
     }
 
     private void executeTest() {

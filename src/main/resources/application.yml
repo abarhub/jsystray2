@@ -1,3 +1,15 @@
 spring.application.name: jsystray2
 #repertoireProjet: c:\test1
 repertoireProjet: .
+
+app:
+  run-maven:
+    -
+      nom: dependency:tree
+      commande: [ "dependency:tree" ]
+    -
+      nom: dependency:analyze
+      commande: [ "dependency:analyze" ]
+    -
+      nom: clean package -skipTest
+      commande: ["clean","package","-skipTests"]
